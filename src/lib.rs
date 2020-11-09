@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use itertools::Itertools;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, SystemTime};
 use std::thread;
@@ -135,18 +136,11 @@ impl Record {
         // If there is only one beat then return an average of 0
         if self.beats.len() == 1 { return Some(Duration::from_secs(0)) };
 
-
-        // Sum the durations of delays between beats
-        let mut total_between_time = Duration::from_millis(0);
-        for (i, t) in self.beats.iter().enumerate() {
-            if i != 0 {
-                if let Ok(time_diff) = t.duration_since(self.beats[i - 1]) {
-                    total_between_time += time_diff
-                } else {
-                    // Else what?
-                }
-            }
-        }
+        // Sum the delay duration between beats
+        let mut total_between_time: Duration = self.beats.iter()
+            .tuple_windows()
+            .filter_map(|(a, b)| b.duration_since(*a).ok())
+            .sum();
 
         // Add the last duration which is duration from last beat to now
         //TODO: Hacky patch just to get it to work, reimplement this bit immediately
