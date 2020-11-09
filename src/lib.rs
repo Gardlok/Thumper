@@ -135,6 +135,7 @@ impl Record {
         // If there is only one beat then return an average of 0
         if self.beats.len() == 1 { return Some(Duration::from_secs(0)) };
 
+
         // Sum the durations of delays between beats
         let mut total_between_time = Duration::from_millis(0);
         for (i, t) in self.beats.iter().enumerate() {
@@ -147,8 +148,12 @@ impl Record {
             }
         }
 
+        // Add the last duration which is duration from last beat to now
+        let last_dur = SystemTime::now().duration_since(*self.beats.back().unwrap());
+        total_between_time += last_dur.unwrap(); 
+
         // Calc and return the average delay duration between beats
-        let number_of_delays = self.beats.len() as u32 - 1;
+        let number_of_delays = self.beats.len() as u32;
         Some(total_between_time / number_of_delays)
     }
 
@@ -174,7 +179,7 @@ impl Record {
 
         // Calculate optimal margin range
         let exp_freq = self.freq.as_millis() as i128;
-        let margin = self.freq.mul_f32(0.01).as_millis() as i128;
+        let margin = self.freq.mul_f32(0.02).as_millis() as i128;
         let start = exp_freq - margin;
         let end = exp_freq + margin;
 
@@ -182,6 +187,7 @@ impl Record {
         // Determine if the real time freq average is optimal according
         // to the expected freq and return Activity Rating variant.
         if let Some(a) = self.get_avg()  {
+            //println!("{:?} in {} -> {}", a, start, end);
             match a.as_millis() as i128{
                 0 => Ok(ActivityRating::OnlyOnce),
                 n if (start..=end).contains(&n) => Ok(ActivityRating::Optimal),
