@@ -20,6 +20,17 @@ fn main() {
 }
 ```
 
+Status varients:
+```rust
+pub enum ActivityRating {
+    Optimal,     // Within 2% of expected turn around
+    NotOptimal,  // Beyond 2% difference in expected turn around
+    OnlyOnce,    // Only one beat in records
+    NotOnce,     // No beats
+}
+```
+There is also a `record.is_optimal()` bool for quick checks.
+
 TODO:
 - Implement allowing of user to configure the "CAP" defaults
 - Implement allowing of user to configure acceptable threshold of
