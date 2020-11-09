@@ -149,12 +149,17 @@ impl Record {
         }
 
         // Add the last duration which is duration from last beat to now
-        let last_dur = SystemTime::now().duration_since(*self.beats.back().unwrap());
-        total_between_time += last_dur.unwrap(); 
+        //TODO: Hacky patch just to get it to work, reimplement this bit immediately
+        let mut extra = 0;
+        if let Ok(last_dur) = SystemTime::now().duration_since(*self.beats.back().unwrap()) {
+            total_between_time += last_dur; 
+            extra = 1;
+        }
 
         // Calc and return the average delay duration between beats
-        let number_of_delays = self.beats.len() as u32;
-        Some(total_between_time / number_of_delays)
+        let mut number_of_delays = self.beats.len() as u32;
+        number_of_delays += extra;
+        Some(total_between_time / number_of_delays )
     }
 
     // Last beat recorded
