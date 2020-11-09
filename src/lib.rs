@@ -157,9 +157,9 @@ impl Record {
         }
 
         // Calc and return the average delay duration between beats
-        let mut number_of_delays = self.beats.len() as u32;
+        let mut number_of_delays = self.beats.len() as u32 - 1;
         number_of_delays += extra;
-        Some(total_between_time / number_of_delays )
+        Some(total_between_time / number_of_delays)
     }
 
     // Last beat recorded
