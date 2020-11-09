@@ -7,7 +7,7 @@ use std::time::{SystemTime, Duration};
 use futures::stream::FuturesUnordered;
 
 
-// Mock test task without seperate counter, which is more like a real scenario 
+// Mock test task 
 async fn run_task(beat: Beat) {
     let delay_dur = Duration::from_secs(1);
     for _ in 1..=100 {
@@ -21,7 +21,7 @@ fn main() {
     // Init the dj
     let dj = TheDJ::init().unwrap();  
 
-    // Init runtime that performs and monitors a mock task
+    // Init runtime that executes and monitors a mock task
     smol::block_on(async {
         
         // Init a task to monitor
@@ -32,7 +32,6 @@ fn main() {
         // Watch the monitor
         loop {
             println!("Status: {:?}", dj.get_record(0).unwrap().get_activity_rating());
-            //println!("avg {:?}", dj.get_record(0).unwrap().get_avg());
             smol::Timer::after(Duration::from_secs(2)).await; 
         }
 
