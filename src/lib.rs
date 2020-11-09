@@ -94,8 +94,8 @@ impl Beat {
 // Enumerator to indicate activity level of the record
 #[derive(PartialEq, Debug)]
 pub enum ActivityRating {
-    Optimal,     // Within 1% of expected turn around 
-    NotOptimal,  // Beyond 1% difference in expected turn around
+    Optimal,     // Within 2% of expected turn around 
+    NotOptimal,  // Beyond 2% difference in expected turn around
     OnlyOnce,    // Only one beat in records
     NotOnce,     // No beats
 }
