@@ -10,6 +10,9 @@ use std::sync::mpsc;
 mod error;
 use error::BeatsError as BE;
 
+mod output;
+use output::*;
+
 type Result<T> = result::Result<T, BE>;
 
 #[cfg(test)]
@@ -36,6 +39,7 @@ struct Indexer {
 impl Indexer {
 
     fn new() -> Indexer{
+        println!("test print");
         Indexer {next_index: 0, in_use: Vec::new()}
     }
 
@@ -107,6 +111,7 @@ pub struct Record {
     pub id: i32,                      // Provided by the ID indexer
     pub freq: Duration,               // Expected duration between beats
     pub beats: VecDeque<SystemTime>,  // Queue of of past <BEAT_CAP> beats
+    pub lrb: Option<SystemTime>,      // Last reported beat
 }
 
 impl Record {
@@ -117,6 +122,7 @@ impl Record {
             id,
             freq,
             beats: VecDeque::new(),
+            lrb: None, 
         }
     }
 
@@ -226,6 +232,7 @@ pub enum DM2Deck {
     Deregistration(i32),
     RequestRecordClone(i32),
     RequestRoster,
+    RequestAllRecords,
 }
 
 // Calls made to the DJ
@@ -233,6 +240,7 @@ pub enum DM2Deck {
 pub enum DM2DJ {
     ID(Result<i32>),
     RecordClone(Option<Record>),
+    Records(Option<Vec<Record>>),
     Roster(Option<Vec<i32>>),
 }
 
@@ -335,6 +343,21 @@ impl TheDJ {
                             // report error
                         };
                     },
+
+                    DM2Deck::RequestAllRecords => {
+                        let mut records = Vec::new();
+
+                        rm.iter_mut().for_each(|x| records.push(x.1.clone()));
+                        let response = match records.is_empty() {
+                            false => Some(records),
+                            _ => None,
+                        };
+                        if let Err(_e) = dj_tx.send(DM2DJ::Records(records)) {
+                            //println!("{:?}", _e);
+                            // report error
+                        };
+                    },
+
                     _ => break,
                 }} else { break };
             };
@@ -411,6 +434,18 @@ impl TheDJ {
 
     }
 
+    // Add an output stream
+    pub fn init_output(&self) -> Output {
+        Output::new(self.rt_tx)
+    }
+
+
 }
 
+
+// ////////////////////////////////////////////////////////////////
+// Can we macro
+// ///////////////////////////////////////////////////
+
+use proc_macro::TokenStream;
 
