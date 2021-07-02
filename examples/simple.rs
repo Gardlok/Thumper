@@ -11,7 +11,7 @@ use futures::stream::FuturesUnordered;
 async fn run_task(beat: Beat) {
     let delay_dur = Duration::from_secs(1);
     for _ in 1..=100 {
-        let _ = beat.send();
+        let _ = beat.now();
         smol::Timer::after(delay_dur).await; 
     }
 }
