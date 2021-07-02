@@ -10,19 +10,16 @@ pub use crate::core::{Beat};
 pub use crate::core::{Record, ActivityRating};
 pub use crate::core::{Deck, DM2Deck, Arm};
 
-pub use error::{BE, Result};
-
+pub use crate::error::{BE, Result};
 
 #[cfg(test)]
 mod test;
-
 
 // ////////////////////////////////////////////////////////////////////////
 // Constants 
 // /////////////////////////////////////////////////////////////
 const RECORD_CAP: usize = 1000;
 const BEAT_CAP: usize = 100;
-
 
 // ////////////////////////////////////////////////////////////////////////
 // ID Indexer 

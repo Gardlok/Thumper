@@ -2,24 +2,26 @@ use std::time::{SystemTime, Duration, UNIX_EPOCH};
 use std::sync::{Arc, mpsc, RwLock};
 use std::collections::HashMap;
 
-use crate::{DM2DJ, DM2Deck, BE, Record};
+use crate::{DM2Deck, BE, Record};
 
+// ////////////////////////////////////////////////////////////////
 // Type less
+// ///////////////////////////////////////////////////
 type AtomicRecordMap = Arc<RwLock<HashMap<i32, Record>>>;
 type ReportsAndTheirLBRs = Vec<(Box<dyn Report>, SystemTime)>;
 
-
-
-// Calls made to the Output runner 
+// ////////////////////////////////////////////////////////////////
+// Enumeration for Messaging OutputRunner
+// ///////////////////////////////////////////////////
 #[derive(Debug)]
 pub enum DM2OutputRunner {
     RegisterOutput(Box<dyn Report>),
     StopOutput,
 }
 
-
-
-
+// ////////////////////////////////////////////////////////////////
+// Report Trait
+// ///////////////////////////////////////////////////
 // This trait is used to build a report object which consumes historical
 // data collected in the program's main loop, and then processes and delivers
 // it to it's destination. The destination is described when building the
@@ -37,6 +39,9 @@ impl std::fmt::Debug for dyn Report {
     }
 }
 
+// ////////////////////////////////////////////////////////////////
+// Report Wrapper for additional metric tracking 
+// ///////////////////////////////////////////////////
 pub struct ReportWrapper {
     report: Box<dyn Report>,
     freq: Duration,

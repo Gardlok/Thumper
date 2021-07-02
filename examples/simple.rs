@@ -1,10 +1,5 @@
-use beats::{TheDJ, Beat, Record, ActivityRating};
-use smol::{io, net, prelude::*, Unblock};
-use smol::Timer;
-use std::collections::HashMap;
-use std::sync::mpsc::{channel, Sender};
-use std::time::{SystemTime, Duration};
-use futures::stream::FuturesUnordered;
+use beats::{TheDJ, Beat};
+use std::time::Duration;
 
 
 // Mock test task 

@@ -7,8 +7,6 @@ use reqwest::header::{HeaderValue, AUTHORIZATION};
 
 use crate::{BE, Record, output::Report};
 
-
-
 // InfluxDB //////////////////////////////////////////
 // After trying:
 // https://docs.rs/influxdb/0.4.0/influxdb/
