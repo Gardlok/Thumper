@@ -150,14 +150,12 @@ impl TheDJ {
         if let Ok(record_map) = self.atomic_record_map.as_ref().expect("You have no ARM here").read() { 
             let mut roster = Vec::new();
             record_map.iter().for_each(|x| roster.push(x.1.id));
-
             if !roster.is_empty() {
                 return Ok(roster)
             }
             return Err(BE::EmptyRoster)
         }
         Err(BE::MaximumConfusion)
-
     }
 
     // Add an output stream
