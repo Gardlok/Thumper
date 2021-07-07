@@ -1,7 +1,9 @@
 use std::collections::VecDeque;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::iter::{Iterator, ExactSizeIterator};
 
-use crate::{Result, BEAT_CAP, CurrentTrack, TrackIter, Track};
+use crate::{Result, BEAT_CAP, CurrentTrack, Track};
+// use crate::{Result, BEAT_CAP, CurrentTrack, TrackIter, Track};
 
 // ////////////////////////////////////////////////////////////////////////
 // Record
@@ -30,7 +32,25 @@ pub struct Record {
     pub id: i32,                      // Provided by the ID indexer
     pub freq: Duration,               // Expected duration between beats
     pub current_track: CurrentTrack,  // Queue of of past <BEAT_CAP> beats
+    track_index: usize,
 }
+
+// impl Iterator for Record {
+//     type Item = SystemTime;
+//     fn next(&mut self) -> Option<Self::Item>  {
+
+//     }
+// }
+
+// impl ExactSizeIterator for Record {
+//     fn len(&self) -> usize {
+//         self.current_track.len()
+//     }
+//     // fn is_empty(&self) -> bool {
+//     //     // self.current_track.is_empty()
+//     //     if self.current_track.len() > 0 {true} else {false}
+//     // }
+// }
 
 impl Record {
 
@@ -40,15 +60,16 @@ impl Record {
             id,
             freq,
             current_track: VecDeque::new(),
+            track_index: 0,
         }
     }
 
-    pub fn iter(&self) -> TrackIter {
-        TrackIter {
-            track: &self.current_track,
-            index: 0,
-        }
-    }
+    // pub fn iter(&self) -> TrackIter {
+    //     TrackIter {
+    //         track: &self.current_track,
+    //         index: 0,
+    //     }
+    // }
 
     // Add a new beat to the queue of.current_track.and then remove any beats
     // older than the newest <BEAT_CAP> from the queue

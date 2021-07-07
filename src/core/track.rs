@@ -18,22 +18,22 @@ pub type CurrentTrackRef<'a> = VecDeque<&'a SystemTime>;
 // ////////////////////////////////////////////////////////////////////////
 // Iterator
 // /////////////////////////////////////////////////////////////
-pub struct TrackIter<'a> {
-    pub track: &'a VecDeque<SystemTime>,
-    pub index: usize,
-}
+// pub struct TrackIter<'a> {
+//     pub track: &'a VecDeque<SystemTime>,
+//     pub index: usize,
+// }
 
-impl<'a> Iterator for TrackIter<'a> {
-    type Item = SystemTime;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.track.len() {
-            self.index += 1;
-            self.track.get(self.index - 1).and_then(|x| Some(x.clone()))
-        } else {
-            None
-        }
-    }
-}
+// impl<'a> Iterator for TrackIter<'a> {
+//     type Item = SystemTime;
+//     fn next(&mut self) -> Option<Self::Item> {
+//         if self.index < self.track.len() {
+//             self.index += 1;
+//             self.track.get(self.index - 1).and_then(|x| Some(x.clone()))
+//         } else {
+//             None
+//         }
+//     }
+// }
 
 // ////////////////////////////////////////////////////////////////////////
 // Trait

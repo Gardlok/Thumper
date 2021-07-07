@@ -54,7 +54,11 @@ pub enum BeatsError {
 
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
+    
+    
 
+    #[error(transparent)]
+    SystemTimeError(#[from] std::time::SystemTimeError),
     // When things get bad. Maybe received a response out of order
     #[error("Maximum Confusion")]
 	MaximumConfusion,

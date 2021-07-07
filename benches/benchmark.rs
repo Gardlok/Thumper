@@ -12,15 +12,14 @@ use std::time::{SystemTime, Duration, UNIX_EPOCH};
 use std::collections::HashMap;
 // use std::result::Result::Err;
 
-// use lazy_static::lazy_static;
+use lazy_static::lazy_static;
 
-// lazy_static! {
-//     static ref SEC: Duration = {
-//         Duration::from_secs(1)
-//     };
-// }
+lazy_static! {
+    static ref SEC: Duration = {
+        Duration::from_secs(1)
+    };
+}
 
-// const 1SEC: Duration = Duration::from_secs(1);
 
 #[derive(Debug)]
 pub struct BenchOutput {
@@ -36,7 +35,7 @@ impl Report for BenchOutput {
         if let Some(beats) = record.get_beats(Some(time_since)) {
             let mut latest_beat = UNIX_EPOCH;
             for beat in beats {
-                let ts = beat.duration_since(UNIX_EPOCH).expect("Marty!").as_nanos() as i64;
+                // let ts = beat.duration_since(UNIX_EPOCH).expect("Marty!").as_nanos() as i64;
                 if beat > &latest_beat { latest_beat = beat.clone()};
 
                 // Report beat as a timestamp
@@ -51,50 +50,40 @@ impl Report for BenchOutput {
     fn end(&self) -> Result<(), BE> {Ok(())}
 }
 
+fn beats(c: &mut Criterion) {
 
-
-fn setup_and_single_beat(c: &mut Criterion) {
-
-    let s = Duration::from_secs(1);
-    let mut group = c.benchmark_group("First Group");
-
-    // let dj = TheDJ::init().unwrap();
-    // let beat = dj.register("BENCH1".to_string(), *SEC).unwrap();
-    // let beat = dj.register("BENCH1".to_string(), s).unwrap();
-
-    group.bench_function("Init DJ", |b| b.iter(|| { let _ = TheDJ::init(); }));
-    // group.bench_function("Init Beat", |b| b.iter(|| { let _ = dj.register("benchinit".to_string(), *SEC); }));
-    // group.bench_function("Init Beat", |b| b.iter(|| { let _ = dj.register("benchinit".to_string(), s); }));
-    // group.bench_function("Send Single Beat", |b| b.iter(||  beat.now()));
-    
-    group.finish();
-}
-
-
-
-
-// fn bench_dj_and_beat_setup(c: &mut Criterion) {
-
-//     // TODO: bench different amount of beat deployment
-
-//     let func = || {
-//         let dj = TheDJ::init().unwrap();  
-//         let beat = dj.register("example".to_string(), *SEC).unwrap();
-//     };
-
-//     c.bench_function("single_beat", |b| b.iter(|| func()));
-// }
-
-fn single_beat(c: &mut Criterion) {
+    let mut group = c.benchmark_group("Beats");
     let dj = TheDJ::init().unwrap();  
-    let beat = dj.register("example".to_string(), Duration::from_secs(1)).unwrap();
-    c.bench_function("single_beat", |b| b.iter(|| beat.now()));
+    
+    // Single beat /////////////////////////////////////////////////////
+    let beat = dj.register("SingleBeatBench".to_string(), *SEC).unwrap();
+    group.bench_function("single_beat", |b| b.iter(|| beat.now()));
+    let _ = dj.clear_all();
+
+    // Many beats ///////////////////////////////////////////////////////
+
+    // Config
+    let count = 99;
+    let timeout = Duration::from_secs(120);
+
+    // Set up    
+    let mut beats: Vec<Beat> = Vec::new();
+    for n in 0..count {
+        beats.push(dj.register(format!("BenchTest#{}", n), *SEC).unwrap());
+    }
+
+    // Execute
+    let func = || {
+        beats.iter().for_each(|b| { let _ = b.now(); });
+        dj.block_for_beats(count, timeout).expect("not blocked");
+    };
+    group.bench_function("many_beats", |b| b.iter(|| func()));
 }
 
 
+// Finally, specify which benches to run
 criterion_group!(
     benches, 
-    setup_and_single_beat,
-    // single_beat,
+    beats,
 );
 criterion_main!(benches);

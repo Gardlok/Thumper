@@ -5,7 +5,8 @@ pub mod core;
 
 pub use crate::output::{Output, Report, DM2OutputRunner, InfluxDB};
 pub use crate::core::{TheDJ, DM2DJ};
-pub use crate::core::{Track, TrackIter, CurrentTrack, CurrentTrackRef};
+pub use crate::core::{Track, CurrentTrack, CurrentTrackRef};
+// pub use crate::core::{Track, TrackIter, CurrentTrack, CurrentTrackRef};
 pub use crate::core::{Beat};
 pub use crate::core::{Record, ActivityRating};
 pub use crate::core::{Deck, DM2Deck, Arm};

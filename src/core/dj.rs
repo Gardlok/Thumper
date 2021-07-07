@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{SystemTime, Duration};
 use std::thread;
 use std::sync::mpsc;
 
@@ -134,6 +134,18 @@ impl TheDJ {
         } else {Ok(())}
     }
 
+    
+    // Clear all records of beats
+    pub fn clear_all(&self) -> Result<()> {
+        self.get_roster()?.iter().map(|id| {
+            if let Err(e) = self.rt_tx.send(DM2Deck::Deregistration(*id)) {
+                Err(BE::DM2DeckSendFail(e))
+            } else { Ok(()) }
+        }).collect::<Result<_>>()
+    }
+
+
+
     // TODO optimize
     // Returns a single record 
     pub fn get_record(&self, id: i32) -> Result<Record> {
@@ -158,6 +170,23 @@ impl TheDJ {
         Err(BE::MaximumConfusion)
     }
 
+
+    // Returns a count struct of records in the roster
+    pub fn get_roster_actives(&self) -> Result<Vec<i32>> {
+        if let Ok(record_map) = self.atomic_record_map.as_ref().expect("You have no ARM here").read() { 
+            let mut roster = Vec::new();
+            record_map.values()
+                .filter(|x| x.get_last().is_some()) 
+                .for_each(|x| roster.push(x.id));
+            if !roster.is_empty() {
+                return Ok(roster)
+            }
+            return Err(BE::EmptyRoster)
+        }
+        Err(BE::MaximumConfusion)
+    }
+
+
     // Add an output stream
     // Eventually we'll be able to remove/stop a current running output
     // when that is ready this function should return an ID
@@ -166,4 +195,21 @@ impl TheDJ {
         Ok(())
     }
 
+    // Blocking the thread that the DJ is in until beat counts are up to a certain
+    // amount or a certain wait time has been reached
+    pub fn block_for_beats(&self, count: usize, timeout: Duration) -> Result<()> {
+        let mut running_count = 0;
+        let start_time = SystemTime::now();
+        loop {
+            if SystemTime::now().duration_since(start_time)? >= timeout { return Err(BE::NothingNewToReport)};
+
+            if let Ok(roster) = self.get_roster_actives() {
+                if roster.len() >= running_count { running_count = roster.len()};
+            }
+            if running_count >= count { return Ok(()) };
+
+            thread::sleep(Duration::from_millis(250));            
+
+        }
+    }
 }
