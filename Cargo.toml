@@ -1,5 +1,5 @@
 [package]
-name = "wings"
+name = "thumper"
 version = "0.1.1"
 authors = ["Gardlok"]
 edition = "2018"
@@ -14,7 +14,7 @@ bus = "2.2.3"
 by_address = "1.0.4"
 
 [dev-dependencies]
-wings = {path = "../wings/"}  # Is this the best way ? 
+thumper = {path = "../thumper/"}  # Is this the best way ? 
 futures = "^0.3.7"
 rust-embed = "^5.6.0"
 rand = "0.6.5"

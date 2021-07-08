@@ -1,4 +1,4 @@
-use wings::{TheDJ, Beat};
+use thumper::{TheDJ, Beat};
 use std::time::Duration;
 
 

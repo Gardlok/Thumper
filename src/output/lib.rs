@@ -2,7 +2,7 @@ use std::time::{SystemTime, Duration, UNIX_EPOCH};
 use std::sync::{Arc, mpsc, RwLock};
 use std::collections::HashMap;
 
-use crate::{DM2Deck, WE, Record};
+use crate::{DM2Deck, TE, Record};
 
 // ////////////////////////////////////////////////////////////////
 // Type less
@@ -27,10 +27,10 @@ pub enum DM2OutputRunner {
 // it to it's destination. The destination is described when building the
 // report object. This object will be called from the Output runtime to execute.
 pub trait Report: Send {
-    fn duration(&self)                 -> Result<Duration, WE>;
-    fn init(&self)                     -> Result<(), WE>;
-    fn run(&mut self, record: &Record) -> Result<(), WE>;
-    fn end(&self)                      -> Result<(), WE>;
+    fn duration(&self)                 -> Result<Duration, TE>;
+    fn init(&self)                     -> Result<(), TE>;
+    fn run(&mut self, record: &Record) -> Result<(), TE>;
+    fn end(&self)                      -> Result<(), TE>;
 }
 
 impl std::fmt::Debug for dyn Report {
@@ -131,7 +131,7 @@ impl Output {
                         // Run the report
                         match rw.report.run(record) {
                             Ok(_) => {},
-                            Err(WE::NothingNewToReport) => {},
+                            Err(TE::NothingNewToReport) => {},
                             Err(e) => {
                                 println!("This error {:?}", e);
                             },

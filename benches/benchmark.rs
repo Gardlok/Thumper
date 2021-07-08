@@ -3,7 +3,7 @@ use criterion::{BenchmarkGroup, BenchmarkId, Throughput};
 use criterion::{criterion_group, criterion_main, Criterion};
 
 
-use wings::{TheDJ, Beat, BE, Record, output::Report};
+use thumper::{TheDJ, Beat, TE, Record, output::Report};
 
 use std::time::{SystemTime, Duration, UNIX_EPOCH};
 use std::collections::HashMap;
@@ -23,9 +23,9 @@ pub struct BenchOutput {
 }
 
 impl Report for BenchOutput {
-    fn duration(&self) -> Result<Duration, BE> {Ok(Duration::from_secs(1))}
-    fn init(&self) -> Result<(), BE> {Ok(())}
-    fn run(&mut self, record: &Record) -> Result<(), BE> {
+    fn duration(&self) -> Result<Duration, TE> {Ok(Duration::from_secs(1))}
+    fn init(&self) -> Result<(), TE> {Ok(())}
+    fn run(&mut self, record: &Record) -> Result<(), TE> {
         
         let time_since = self.lrb_map.entry(record.id).or_insert(UNIX_EPOCH) ;
         if let Some(beats) = record.get_beats(Some(time_since)) {
@@ -44,7 +44,7 @@ impl Report for BenchOutput {
         }
         Ok(())
     } 
-    fn end(&self) -> Result<(), BE> {Ok(())}
+    fn end(&self) -> Result<(), TE> { Ok(())}
 }
 
 // Bench group that focuses on the beat operations 

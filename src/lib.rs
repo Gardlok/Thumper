@@ -11,7 +11,7 @@ pub use crate::core::{Beat};
 pub use crate::core::{Record, ActivityRating};
 pub use crate::core::{Deck, DM2Deck, Arm};
 
-pub use crate::error::{WE, Result};
+pub use crate::error::{TE, Result};
 
 #[cfg(test)]
 mod test;
@@ -46,7 +46,7 @@ impl Indexer {
         {
             self.in_use.push(n);
             Ok(n)
-        } else { Err(WE::MaximumCapacity) }
+        } else { Err(TE::MaximumCapacity) }
     }
 
     fn remove(&mut self, job_id: i32) {

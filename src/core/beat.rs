@@ -2,7 +2,7 @@
 use std::time::SystemTime;
 use std::sync::mpsc;
 
-use crate::{Result, WE, DM2Deck};
+use crate::{Result, TE, DM2Deck};
 
 // ////////////////////////////////////////////////////////////////////////
 // Beat 
@@ -20,7 +20,7 @@ impl Beat {
         if let Err(e) = self.sender.send(
 			DM2Deck::Ping(self.id, SystemTime::now())
 		) { 
-			Err(WE::DM2DeckSendFail(e)) 
+			Err(TE::DM2DeckSendFail(e)) 
 		} else { 
 			Ok(()) 
 		}
@@ -30,7 +30,7 @@ impl Beat {
         if let Err(e) = self.sender.send(
 			DM2Deck::Ping(self.id, timestamp)
 		) { 
-			Err(WE::DM2DeckSendFail(e)) 
+			Err(TE::DM2DeckSendFail(e)) 
 		} else { 
 			Ok(()) 
 		}

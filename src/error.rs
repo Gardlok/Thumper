@@ -2,12 +2,12 @@ use std::result;
 use thiserror::Error;
 
 use crate::{DM2OutputRunner, DM2Deck};
-pub use WingsError as WE;
+pub use ThumperError as TE;
 
-pub type Result<T> = result::Result<T, >;
+pub type Result<T> = result::Result<T, TE>;
 
 #[derive(Error, Debug)]
-pub enum WingsError {
+pub enum ThumperError {
 
     #[error(transparent)]
     IOError(std::io::Error),

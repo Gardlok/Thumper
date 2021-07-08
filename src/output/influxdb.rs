@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use reqwest::header::{HeaderValue, AUTHORIZATION};
 
-use crate::{WE, Record, output::Report};
+use crate::{TE, Record, output::Report};
 
 // InfluxDB //////////////////////////////////////////
 // After trying:
@@ -25,7 +25,7 @@ pub struct InfluxDB {
 }
 
 impl InfluxDB {
-    pub fn new(address: String, name: String) -> Result<InfluxDB, WE> {
+    pub fn new(address: String, name: String) -> Result<InfluxDB, TE> {
         Ok(InfluxDB{
             address,
             name, 
@@ -38,9 +38,9 @@ impl InfluxDB {
 }
 
 impl Report for InfluxDB {
-    fn duration(&self) -> Result<Duration, WE> {Ok(Duration::from_secs(1))}
-    fn init(&self) -> Result<(), WE> {Ok(())}
-    fn run(&mut self, record: &Record) -> Result<(), WE> {
+    fn duration(&self) -> Result<Duration, TE> {Ok(Duration::from_secs(1))}
+    fn init(&self) -> Result<(), TE> {Ok(())}
+    fn run(&mut self, record: &Record) -> Result<(), TE> {
         let addy = format!("{}/api/v2/write?org={}&bucket={}", &self.address, &self.org, &self.bucket);
         let header_value = HeaderValue::from_str(&format!("Token {}", &self.auth))?;
         
@@ -66,5 +66,5 @@ impl Report for InfluxDB {
         }
         Ok(())
     } 
-    fn end(&self) -> Result<(), WE> {Ok(())}
+    fn end(&self) -> Result<(), TE> {Ok(())}
 }

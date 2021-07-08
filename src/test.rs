@@ -1,5 +1,5 @@
 use crate::*;
-use crate::error::WingsError as WE;
+use crate::error::ThumperError as TE;
 
 use smol::{io, prelude::*};
 use std::collections::HashMap;
