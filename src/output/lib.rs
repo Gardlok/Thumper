@@ -2,7 +2,7 @@ use std::time::{SystemTime, Duration, UNIX_EPOCH};
 use std::sync::{Arc, mpsc, RwLock};
 use std::collections::HashMap;
 
-use crate::{DM2Deck, BE, Record};
+use crate::{DM2Deck, WE, Record};
 
 // ////////////////////////////////////////////////////////////////
 // Type less
@@ -27,10 +27,10 @@ pub enum DM2OutputRunner {
 // it to it's destination. The destination is described when building the
 // report object. This object will be called from the Output runtime to execute.
 pub trait Report: Send {
-    fn duration(&self)                 -> Result<Duration, BE>;
-    fn init(&self)                     -> Result<(), BE>;
-    fn run(&mut self, record: &Record) -> Result<(), BE>;
-    fn end(&self)                      -> Result<(), BE>;
+    fn duration(&self)                 -> Result<Duration, WE>;
+    fn init(&self)                     -> Result<(), WE>;
+    fn run(&mut self, record: &Record) -> Result<(), WE>;
+    fn end(&self)                      -> Result<(), WE>;
 }
 
 impl std::fmt::Debug for dyn Report {
@@ -104,11 +104,14 @@ impl Output {
             // this may require further testing
             if let Ok(arm) = arm_copy {
                 
+                // Iter through reports (These are wrapped with RecordWrapper, that adds 
+                // a layer of extra metric information needed to track LBR or Last Beat Record)
                 for rw in reports.iter_mut() {
                     
                     // If report hasn't waited long enough to run again then no need to proceed
                     if SystemTime::now() < rw.last.checked_add(rw.freq).unwrap_or(UNIX_EPOCH) { continue };
                     
+                    // Update the lrb_map with new beats since last iteration, if any.
                     for (id, record) in arm.iter() {
                         match lrb_map.entry(*id) {
                             std::collections::hash_map::Entry::Occupied(o) => {
@@ -125,9 +128,10 @@ impl Output {
                             },
                         }
 
+                        // Run the report
                         match rw.report.run(record) {
                             Ok(_) => {},
-                            Err(BE::NothingNewToReport) => {},
+                            Err(WE::NothingNewToReport) => {},
                             Err(e) => {
                                 println!("This error {:?}", e);
                             },

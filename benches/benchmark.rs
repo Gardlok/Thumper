@@ -1,26 +1,22 @@
 
-// #![allow(unused)]
 use criterion::{BenchmarkGroup, BenchmarkId, Throughput};
 use criterion::{criterion_group, criterion_main, Criterion};
 
-// To not to
-use criterion::*;
 
-use beats::{TheDJ, Beat, BE, Record, output::Report};
+use wings::{TheDJ, Beat, BE, Record, output::Report};
 
 use std::time::{SystemTime, Duration, UNIX_EPOCH};
 use std::collections::HashMap;
-// use std::result::Result::Err;
 
+// Duration of a second seems to be popular
 use lazy_static::lazy_static;
-
 lazy_static! {
     static ref SEC: Duration = {
         Duration::from_secs(1)
     };
 }
 
-
+// Not yet implemented. This is to be used to benchmark the  output system
 #[derive(Debug)]
 pub struct BenchOutput {
     lrb_map: HashMap<i32, SystemTime>
@@ -39,6 +35,7 @@ impl Report for BenchOutput {
                 if beat > &latest_beat { latest_beat = beat.clone()};
 
                 // Report beat as a timestamp
+                unimplemented!();
 
             }
 
@@ -50,6 +47,7 @@ impl Report for BenchOutput {
     fn end(&self) -> Result<(), BE> {Ok(())}
 }
 
+// Bench group that focuses on the beat operations 
 fn beats(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("Beats");

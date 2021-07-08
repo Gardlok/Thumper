@@ -2,7 +2,7 @@ use std::time::{SystemTime, Duration};
 use std::thread;
 use std::sync::mpsc;
 
-use crate::{Deck, DM2Deck, BE, Result, Record, Arm, DM2OutputRunner, Report, Output, Beat};
+use crate::{Deck, DM2Deck, WE, Result, Record, Arm, DM2OutputRunner, Report, Output, Beat};
 
 // ////////////////////////////////////////////////////////////////
 // The DJ 
@@ -70,15 +70,15 @@ impl TheDJ {
 
         // Get the new DJ a rwlock read only link of the atomic record map
         if let Err(e) = the_dj.rt_tx.send(DM2Deck::Init()) {
-            return Err(BE::DM2DeckSendFail(e));
+            return Err(WE::DM2DeckSendFail(e));
         } else {
             match the_dj.rt_rx.recv() {
                 Ok(DM2DJ::ARM(arm)) => {
                     let arm_ = Some(arm.clone());
                     the_dj.atomic_record_map = arm_
                 },
-                Err(e) => return Err(BE::ChannelRecvFail(e)),
-                _ => return Err(BE::MaximumConfusion),
+                Err(e) => return Err(WE::ChannelRecvFail(e)),
+                _ => return Err(WE::MaximumConfusion),
             }; 
         }
 
@@ -110,19 +110,19 @@ impl TheDJ {
 
         // Verify input data
         if name.len() == 0 || freq.as_millis() == 0 {
-            return Err(BE::RegisterFail ("Error: Incorrect register data"))
+            return Err(WE::RegisterFail ("Error: Incorrect register data"))
         }
 
         // Make a registration call and create a new Beat with the returned id
         // and a cloned copy of the runtime call sender. For pings.
         if let Err(e) = self.rt_tx.send(DM2Deck::Registration(name, freq)) {
-            Err(BE::DM2DeckSendFail(e))
+            Err(WE::DM2DeckSendFail(e))
         } else {
             match self.rt_rx.recv() {
                 Ok(DM2DJ::ID(Ok(id))) => Ok(Beat{id, sender: self.rt_tx.clone()}),
                 Ok(DM2DJ::ID(Err(e))) => Err(e),
-                Err(e) => Err(BE::ChannelRecvFail(e)),
-                _ => Err(BE::MaximumConfusion),
+                Err(e) => Err(WE::ChannelRecvFail(e)),
+                _ => Err(WE::MaximumConfusion),
             } 
         }
     }
@@ -130,7 +130,7 @@ impl TheDJ {
     // Remove a record from the record map
     pub fn unregister(&self, id: i32) -> Result<()> {
         if let Err(e) = self.rt_tx.send(DM2Deck::Deregistration(id)) {
-            Err(BE::DM2DeckSendFail(e))
+            Err(WE::DM2DeckSendFail(e))
         } else {Ok(())}
     }
 
@@ -139,7 +139,7 @@ impl TheDJ {
     pub fn clear_all(&self) -> Result<()> {
         self.get_roster()?.iter().map(|id| {
             if let Err(e) = self.rt_tx.send(DM2Deck::Deregistration(*id)) {
-                Err(BE::DM2DeckSendFail(e))
+                Err(WE::DM2DeckSendFail(e))
             } else { Ok(()) }
         }).collect::<Result<_>>()
     }
@@ -154,7 +154,7 @@ impl TheDJ {
                 return Ok(record.clone());
             }
         }
-        Err(BE::MissingRecord)
+        Err(WE::MissingRecord)
     }
 	
     // Returns a list of record ids
@@ -165,9 +165,9 @@ impl TheDJ {
             if !roster.is_empty() {
                 return Ok(roster)
             }
-            return Err(BE::EmptyRoster)
+            return Err(WE::EmptyRoster)
         }
-        Err(BE::MaximumConfusion)
+        Err(WE::MaximumConfusion)
     }
 
 
@@ -181,9 +181,9 @@ impl TheDJ {
             if !roster.is_empty() {
                 return Ok(roster)
             }
-            return Err(BE::EmptyRoster)
+            return Err(WE::EmptyRoster)
         }
-        Err(BE::MaximumConfusion)
+        Err(WE::MaximumConfusion)
     }
 
 
@@ -201,7 +201,7 @@ impl TheDJ {
         let mut running_count = 0;
         let start_time = SystemTime::now();
         loop {
-            if SystemTime::now().duration_since(start_time)? >= timeout { return Err(BE::NothingNewToReport)};
+            if SystemTime::now().duration_since(start_time)? >= timeout { return Err(WE::NothingNewToReport)};
 
             if let Ok(roster) = self.get_roster_actives() {
                 if roster.len() >= running_count { running_count = roster.len()};

@@ -7,7 +7,9 @@ use std::time::{Duration, SystemTime};
 // /////////////////////////////////////////////////////////////
 
 // A track is a ollection of raw beat timestamps and is owned by the 
-// record. 
+// record. Defined here is more raw/primitive functions, specifically used
+// on the collection of timestamps that represent a historical archive of
+// _beats_.
 
 // ////////////////////////////////////////////////////////////////////////
 // Type less 

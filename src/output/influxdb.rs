@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use reqwest::header::{HeaderValue, AUTHORIZATION};
 
-use crate::{BE, Record, output::Report};
+use crate::{WE, Record, output::Report};
 
 // InfluxDB //////////////////////////////////////////
 // After trying:
@@ -25,7 +25,7 @@ pub struct InfluxDB {
 }
 
 impl InfluxDB {
-    pub fn new(address: String, name: String) -> Result<InfluxDB, BE> {
+    pub fn new(address: String, name: String) -> Result<InfluxDB, WE> {
         Ok(InfluxDB{
             address,
             name, 
@@ -38,9 +38,9 @@ impl InfluxDB {
 }
 
 impl Report for InfluxDB {
-    fn duration(&self) -> Result<Duration, BE> {Ok(Duration::from_secs(1))}
-    fn init(&self) -> Result<(), BE> {Ok(())}
-    fn run(&mut self, record: &Record) -> Result<(), BE> {
+    fn duration(&self) -> Result<Duration, WE> {Ok(Duration::from_secs(1))}
+    fn init(&self) -> Result<(), WE> {Ok(())}
+    fn run(&mut self, record: &Record) -> Result<(), WE> {
         let addy = format!("{}/api/v2/write?org={}&bucket={}", &self.address, &self.org, &self.bucket);
         let header_value = HeaderValue::from_str(&format!("Token {}", &self.auth))?;
         
@@ -53,7 +53,6 @@ impl Report for InfluxDB {
                 // TODO: Do something else if fails
                 let ts = beat.duration_since(UNIX_EPOCH).expect("Marty!").as_nanos() as i64;
                 let msg = format!("{},beatname={} expected={} {}", self.name, record.name, record.freq.as_secs(), ts);
-                // println!("MESSAGE: {:?}", &msg);
                 let client = reqwest::blocking::Client::new();
                 client.post(&addy)
                     .body(msg)
@@ -67,5 +66,5 @@ impl Report for InfluxDB {
         }
         Ok(())
     } 
-    fn end(&self) -> Result<(), BE> {Ok(())}
+    fn end(&self) -> Result<(), WE> {Ok(())}
 }

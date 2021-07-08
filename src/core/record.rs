@@ -35,6 +35,9 @@ pub struct Record {
     track_index: usize,
 }
 
+// The goal here is to get Record the Iterator trait which points towards
+// the elements in the current_track that resides in the Record itself
+// TODO: This is close to working, so finish?
 // impl Iterator for Record {
 //     type Item = SystemTime;
 //     fn next(&mut self) -> Option<Self::Item>  {
@@ -64,6 +67,7 @@ impl Record {
         }
     }
 
+    // Likely to be scrapped when the Iter trait is properly implemented
     // pub fn iter(&self) -> TrackIter {
     //     TrackIter {
     //         track: &self.current_track,
@@ -112,7 +116,6 @@ impl Record {
         // Determine if the real time freq average is optimal according
         // to the expected freq and return Activity Rating variant.
         if let Some(a) = self.current_track.get_average()  {
-            //println!("{:?} in {} -> {}", a, start, end);
             match a.as_millis() as i128{
                 0 => Ok(ActivityRating::OnlyOnce),
                 n if (start..=end).contains(&n) => Ok(ActivityRating::Optimal),
@@ -137,7 +140,7 @@ impl Record {
         self.current_track.has_updated_since(*lrb.unwrap_or(&SystemTime::now()))
     }
 
-    // Returns a list of.current_track.associated with the record, if a last beat record is
+    // Returns a list of beats associated with the record, if a last beat record is
     // provided then this will return.current_track.that occured after that
     pub fn get_beats(&self, lbr: Option<&SystemTime>) -> Option<Vec<&SystemTime>> {
         match self.current_track.get_since(lbr.unwrap_or(&UNIX_EPOCH)) {
