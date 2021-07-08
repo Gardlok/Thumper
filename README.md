@@ -1,7 +1,9 @@
-# beats-lite
+# Wings
 Concurrent tasks' health monitoring
+or
+End-point integrity validation
 
-Determine if an asynchronous task is _ticking_ as it should be. This is an attempt to implement system health status monitoring. This collects and analyzes metrics delivered from ticks/beats that occur either in various parts of your program, system, and/or network. This is currently very alpha/experimental and should not be used in a critical production environment yet. 
+Determine if an asynchronous task is _ticking_ as it should be. This is an attempt to implement system health status monitoring. This collects and analyzes metrics delivered from ticks/beats that occur either in various parts of your program, system, and/or network. This is currently very alpha/experimental and should not be used in a critical production environment yet. Expect possible breaking changes frequently. 
 
 Usage:
 ```rust
