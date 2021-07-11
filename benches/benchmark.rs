@@ -2,8 +2,7 @@
 use criterion::{BenchmarkGroup, BenchmarkId, Throughput};
 use criterion::{criterion_group, criterion_main, Criterion};
 
-
-use thumper::{TheDJ, Beat, TE, Record, output::Report};
+use thumper::{TheDJ, Beat, TE, Record, output::Report, BEAT_CAP, RECORD_CAP};
 
 use std::time::{SystemTime, Duration, UNIX_EPOCH};
 use std::collections::HashMap;
@@ -36,7 +35,6 @@ impl Report for BenchOutput {
 
                 // Report beat as a timestamp
                 unimplemented!();
-
             }
 
             // Update the last beat record so we know where to pickup next iteration
@@ -79,9 +77,67 @@ fn beats(c: &mut Criterion) {
 }
 
 
+fn record(c: &mut Criterion) {
+
+    let mut group = c.benchmark_group("Record");
+    let dj = TheDJ::init().unwrap();  
+    let beat = dj.register("RecordBench".to_string(), *SEC).unwrap();
+    let id = beat.id;
+
+    // Bench populate the record's track with beats ///////////////////////
+    let populate = || {
+        for i in 0..BEAT_CAP {
+            let t = SystemTime::now().checked_add(*SEC * i as u32).unwrap();
+            let _ = beat.from(t);
+        }
+    };
+    group.bench_function("record_populating", |b| b.iter(|| populate));
+    // let _ = dj.clear_all();
+
+    // Bench simple record retrieval through the dj /////////////////////////////////////
+    let retrieve = || {
+        let _ = dj.get_record(id);
+    };
+    group.bench_function("record_retrieval", |b| b.iter(|| retrieve()));
+
+    // From this point use the same one record object ///////////////////////////////////
+    let record = dj.get_record(id).unwrap(); 
+
+    // Bench verifying whether the record has been updated or not ///////////////////////
+    let has_updated = || {
+        // by not passing in the SystemTime, it will generate it's own.
+        let _ = record.has_updated_since(None);
+    };
+    group.bench_function("has_updated", |b| b.iter(|| has_updated()));
+
+    // Bench is_optimal, which covers get_activity_rating, and get_average //////////////
+    let is_optimal = || {
+        let _ = record.is_optimal();
+    };
+    group.bench_function("is_optimal", |b| b.iter(|| is_optimal()));
+
+    // Benjh get_roster_activies ////////////////////////////////////////////////////////
+    let get_roster_actives = || {
+        let _ = dj.get_roster_actives();
+    };
+    group.bench_function("get_roster_actives", |b| b.iter(|| get_roster_actives()));
+
+    // Bench regristation and unregistration ///////////////////////////////////////////
+    let reg_to_unreg = || {
+        let r = dj.register("reg_to_unreg".to_string(), *SEC);
+        let _ = dj.unregister(r.unwrap().id);
+    };
+    group.bench_function("reg_to_unreg", |b| b.iter(|| reg_to_unreg()));
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////
+}
+
+
 // Finally, specify which benches to run
 criterion_group!(
     benches, 
     beats,
+    record,
 );
 criterion_main!(benches);

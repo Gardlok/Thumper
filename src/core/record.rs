@@ -78,6 +78,7 @@ impl Record {
     // Add a new beat to the queue of.current_track.and then remove any beats
     // older than the newest <BEAT_CAP> from the queue
     pub fn add_beat(&mut self, time: SystemTime) {
+        // TODO: Proper validation on what's being pushed into vecdeque
         self.current_track.push_back(time);
         while self.current_track.len() > BEAT_CAP { self.current_track.pop_front(); };
     }
@@ -141,7 +142,7 @@ impl Record {
     }
 
     // Returns a list of beats associated with the record, if a last beat record is
-    // provided then this will return.current_track.that occured after that
+    // provided then this will return beats that occured after that
     pub fn get_beats(&self, lbr: Option<&SystemTime>) -> Option<Vec<&SystemTime>> {
         match self.current_track.get_since(lbr.unwrap_or(&UNIX_EPOCH)) {
             Some(current_track) if current_track.len() > 0 => {

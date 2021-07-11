@@ -133,7 +133,6 @@ impl TheDJ {
             Err(TE::DM2DeckSendFail(e))
         } else {Ok(())}
     }
-
     
     // Clear all records of beats
     pub fn clear_all(&self) -> Result<()> {
@@ -144,13 +143,12 @@ impl TheDJ {
         }).collect::<Result<_>>()
     }
 
-
-
     // TODO optimize
     // Returns a single record 
     pub fn get_record(&self, id: i32) -> Result<Record> {
         if let Ok(record_map) = self.atomic_record_map.as_ref().expect("You have no ARM here").read() {
             if let Some(record) = record_map.get(&id) {
+                // return Ok(record.clone());
                 return Ok(record.clone());
             }
         }
