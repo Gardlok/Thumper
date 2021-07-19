@@ -168,7 +168,6 @@ impl TheDJ {
         Err(TE::MaximumConfusion)
     }
 
-
     // Returns a count struct of records in the roster
     pub fn get_roster_actives(&self) -> Result<Vec<i32>> {
         if let Ok(record_map) = self.atomic_record_map.as_ref().expect("You have no ARM here").read() { 
@@ -183,7 +182,6 @@ impl TheDJ {
         }
         Err(TE::MaximumConfusion)
     }
-
 
     // Add an output stream
     // Eventually we'll be able to remove/stop a current running output

@@ -1,5 +1,5 @@
 
-use criterion::{BenchmarkGroup, BenchmarkId, Throughput};
+// use criterion::{BenchmarkGroup, BenchmarkId, Throughput};
 use criterion::{criterion_group, criterion_main, Criterion};
 
 use thumper::{TheDJ, Beat, TE, Record, output::Report, BEAT_CAP, RECORD_CAP};
@@ -84,7 +84,7 @@ fn record(c: &mut Criterion) {
     let beat = dj.register("RecordBench".to_string(), *SEC).unwrap();
     let id = beat.id;
 
-    // Bench populate the record's track with beats ///////////////////////
+    // Bench populate the record's track with beats /////////////////////////////////////
     let populate = || {
         for i in 0..BEAT_CAP {
             let t = SystemTime::now().checked_add(*SEC * i as u32).unwrap();
