@@ -57,7 +57,7 @@ pub struct ReportWrapper {
 // of beats 
 pub struct Output {
     pub atomic_record_map: AtomicRecordMap,
-    pub rt_tx: mpsc::Sender<DM2Deck>,                     
+    // pub rt_tx: mpsc::Sender<DM2Deck>,                     
     pub outputrunner_rx: mpsc::Receiver<DM2OutputRunner>,
 }
 

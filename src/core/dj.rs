@@ -88,7 +88,7 @@ impl TheDJ {
             thread::spawn(move  || {
                 let output_runner = Output {
                     atomic_record_map:arm_, 
-                    rt_tx: deck_tx.clone(),
+                    // rt_tx: deck_tx.clone(),
                     outputrunner_rx: outputrunner_rx, 
                 };
                 output_runner.run();
@@ -106,20 +106,24 @@ impl TheDJ {
     // /////////////////////////////////////////////////////////////////// //
 
     // Add a record to the record map and return an assoiciated Beat struct
-    pub fn register(&self, name: String, freq: Duration) -> Result<Beat> {
+    pub fn spin_new(&self, name: String) -> Result<Beat> {
 
         // Verify input data
-        if name.len() == 0 || freq.as_millis() == 0 {
+        if name.len() == 0 {
             return Err(TE::RegisterFail ("Error: Incorrect register data"))
         }
 
         // Make a registration call and create a new Beat with the returned id
         // and a cloned copy of the runtime call sender. For pings.
-        if let Err(e) = self.rt_tx.send(DM2Deck::Registration(name, freq)) {
+        if let Err(e) = self.rt_tx.send(DM2Deck::Registration(name)) {
             Err(TE::DM2DeckSendFail(e))
         } else {
+            // WARNING: What if the deck never returns a response?
+            // TODO: Timeout?
             match self.rt_rx.recv() {
-                Ok(DM2DJ::ID(Ok(id))) => Ok(Beat{id, sender: self.rt_tx.clone()}),
+                Ok(DM2DJ::ID(Ok(id))) => {
+                    Ok(Beat{id, sender: self.rt_tx.clone()})
+                },
                 Ok(DM2DJ::ID(Err(e))) => Err(e),
                 Err(e) => Err(TE::ChannelRecvFail(e)),
                 _ => Err(TE::MaximumConfusion),

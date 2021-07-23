@@ -1,3 +1,4 @@
+// use thumper::{TheDJ, Beat, BeatConfig};
 use thumper::{TheDJ, Beat};
 use std::time::Duration;
 
@@ -19,12 +20,14 @@ fn main() {
     // Init runtime that executes and monitors a mock task
     smol::block_on(async {
         
+        // Generate the simple beat 
+        let beat = dj.spin_new("example".to_string()).unwrap();
+
         // Init a task to monitor
-        let d = Duration::from_secs(1);
-        let b = dj.register("example".to_string(), d).unwrap();
-        smol::spawn(async move{run_task(b).await}).detach();
+        smol::spawn(async move{run_task(beat).await}).detach();
 
         // Watch the monitor
+        println!("Press ctrl+c to quit!");
         loop {
             println!("Status: {:?}", dj.get_record(0).unwrap().get_activity_rating());
             smol::Timer::after(Duration::from_secs(2)).await; 

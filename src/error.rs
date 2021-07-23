@@ -18,6 +18,12 @@ pub enum ThumperError {
     #[error("MPSC send error: DM2Deck")]
     DM2DeckSendFail(#[from] std::sync::mpsc::SendError<DM2Deck>),
 
+
+    // #[error(transparent)]
+    // SendFail(#[from] std::sync::mpsc::SendError<DM2Deck>),
+
+    // std::sync::mpsc::SendError<core::deck::DM2Deck>>
+
     #[error("MPSC send error: DM2OutputRunner")]
     DM2OutputRunner(#[from] std::sync::mpsc::SendError<DM2OutputRunner>),
 
@@ -54,6 +60,8 @@ pub enum ThumperError {
 
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
+
+    
     
     
 

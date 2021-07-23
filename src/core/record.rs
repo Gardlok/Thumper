@@ -30,50 +30,28 @@ pub enum ActivityRating {
 pub struct Record {
     pub name: String,                 // Name is for reporting purposes
     pub id: i32,                      // Provided by the ID indexer
+    deployment: SystemTime,
     pub freq: Duration,               // Expected duration between beats
     pub current_track: CurrentTrack,  // Queue of of past <BEAT_CAP> beats
     track_index: usize,
 }
 
-// The goal here is to get Record the Iterator trait which points towards
-// the elements in the current_track that resides in the Record itself
-// TODO: This is close to working, so finish?
-// impl Iterator for Record {
-//     type Item = SystemTime;
-//     fn next(&mut self) -> Option<Self::Item>  {
-
-//     }
-// }
-
-// impl ExactSizeIterator for Record {
-//     fn len(&self) -> usize {
-//         self.current_track.len()
-//     }
-//     // fn is_empty(&self) -> bool {
-//     //     // self.current_track.is_empty()
-//     //     if self.current_track.len() > 0 {true} else {false}
-//     // }
-// }
-
 impl Record {
 
-    pub fn new(name: String, id: i32,  freq: Duration) -> Self {
+    pub fn new(name: String, id: i32) -> Self {
         Record {
             name,
             id,
-            freq,
+            deployment: SystemTime::now(),
+            freq: Duration::from_secs(0),
             current_track: VecDeque::new(),
             track_index: 0,
         }
     }
 
-    // Likely to be scrapped when the Iter trait is properly implemented
-    // pub fn iter(&self) -> TrackIter {
-    //     TrackIter {
-    //         track: &self.current_track,
-    //         index: 0,
-    //     }
-    // }
+    pub fn set_expected_freq(&mut self, expected: Duration) {
+        self.freq = expected;
+    }
 
     // Add a new beat to the queue of.current_track.and then remove any beats
     // older than the newest <BEAT_CAP> from the queue
@@ -81,6 +59,10 @@ impl Record {
         // TODO: Proper validation on what's being pushed into vecdeque
         self.current_track.push_back(time);
         while self.current_track.len() > BEAT_CAP { self.current_track.pop_front(); };
+    }
+
+    pub fn set_deployment(&mut self, deployment: SystemTime) {
+        self.deployment = deployment;
     }
 
     // Last beat recorded
@@ -164,6 +146,25 @@ impl Record {
             _ => return None,
         }
     }
+
+    // A very very basic implementation of a self determination of beat frequency. This
+    // requires a lot more logic to achieve accuracy. Maybe a confidence rating as well?
+    // TODO: This needs to be much smarter
+    pub fn guess_freq(&self) -> Option<Duration> {
+        match self.get_beats(None) {
+            // If no beats
+            None => None,
+            // If one beat, assume duration between the beats deployed time and actual transmit time
+            Some(beats) if beats.len() == 1 => { self.deployment.duration_since(*beats[0]).ok() },
+            // If two beats, assume duration to be similiar to duration between the two timestamps
+            Some(beats) if beats.len() == 2 => { beats[1].duration_since(*beats[0]).ok() },
+            // If more than two, get an average of duration between timestamps
+            Some(_) => self.current_track.get_average(),
+            // Anything else
+            _ => None,
+        }
+    }
+
 }
 
 

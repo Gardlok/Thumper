@@ -18,7 +18,9 @@ pub type Arm = Arc<RwLock<HashMap<i32, Record>>>;
 #[derive(Debug)]
 pub enum DM2Deck {
     Ping(i32, SystemTime),
-    Registration(String, Duration),
+    Registration(String),
+    Deploy(i32, SystemTime),
+    SetExpectedFreq(i32, Duration),
     Deregistration(i32),
     UpdateAtomicRecordMap,
     Init()
@@ -52,15 +54,25 @@ impl Deck {
                             panic!("TX to DJ failed: {:?}", e)
                         } 
                     },
+                    DM2Deck::Deploy(id, time) => {
+                        if let Some(n) = rm.get_mut(&id) {
+                            n.set_deployment(time);
+                        }
+                    },
+                    DM2Deck::SetExpectedFreq(id, expected) => {
+                        if let Some(n) = rm.get_mut(&id) {
+                            n.set_expected_freq(expected);
+                        }
+                    },
                     DM2Deck::Ping(id, time) => {
                         if let Some(n) = rm.get_mut(&id) {
                             n.add_beat(time);
                         }
                     },
-                    DM2Deck::Registration(name, freq) => {
+                    DM2Deck::Registration(name) => {
                         match indexer.next() {
                             Ok(id) => { 
-                                rm.insert(id, Record::new(name, id, freq)); 
+                                rm.insert(id, Record::new(name, id)); 
                                 if let Err(_e) =  dj_tx.send(DM2DJ::ID(Ok(id))) {
                                     rm.remove(&id);
                                     break;

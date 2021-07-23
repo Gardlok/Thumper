@@ -52,7 +52,7 @@ fn beats(c: &mut Criterion) {
     let dj = TheDJ::init().unwrap();  
     
     // Single beat /////////////////////////////////////////////////////
-    let beat = dj.register("SingleBeatBench".to_string(), *SEC).unwrap();
+    let beat = dj.spin_new("SingleBeatBench".to_string()).unwrap();
     group.bench_function("single_beat", |b| b.iter(|| beat.now()));
     let _ = dj.clear_all();
 
@@ -65,7 +65,7 @@ fn beats(c: &mut Criterion) {
     // Set up    
     let mut beats: Vec<Beat> = Vec::new();
     for n in 0..count {
-        beats.push(dj.register(format!("BenchTest#{}", n), *SEC).unwrap());
+        beats.push(dj.spin_new(format!("BenchTest#{}", n)).unwrap());
     }
 
     // Execute
@@ -81,7 +81,7 @@ fn record(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("Record");
     let dj = TheDJ::init().unwrap();  
-    let beat = dj.register("RecordBench".to_string(), *SEC).unwrap();
+    let beat = dj.spin_new("RecordBench".to_string()).unwrap();
     let id = beat.id;
 
     // Bench populate the record's track with beats /////////////////////////////////////
@@ -124,7 +124,7 @@ fn record(c: &mut Criterion) {
 
     // Bench regristation and unregistration ///////////////////////////////////////////
     let reg_to_unreg = || {
-        let r = dj.register("reg_to_unreg".to_string(), *SEC);
+        let r = dj.spin_new("reg_to_unreg".to_string());
         let _ = dj.unregister(r.unwrap().id);
     };
     group.bench_function("reg_to_unreg", |b| b.iter(|| reg_to_unreg()));

@@ -12,6 +12,10 @@ use rand;
 
 // Mock test task which supports a seperate counter
 async fn run_task(id: i32, sender: Sender<TestCall>, beat: Beat) {
+    
+    // Deploy would help determine frequency better
+    beat.deploy();
+
     for i in 1..=id {
         assert!(beat.now().is_ok(), "Cannot send beat to the runtime");
         assert!(sender.send(TestCall::TestBeat(id)).is_ok(), "Counter fail");
@@ -60,8 +64,7 @@ mod tests {
         // Init runtime that performs and monitors the  mock tasks
         smol::block_on(async {
             for i in 1..=test_count {
-				let d = Duration::from_secs(i as u64);
-				let b = dj.register(format!("test_beat_{:?}", i), d).unwrap();
+				let b = dj.spin_new(format!("test_beat_{:?}", i)).unwrap();
                 let s = tx.clone();
                 smol::spawn(async move{run_task(i, s, b).await}).detach();
 			}
@@ -116,8 +119,8 @@ mod tests {
 
         assert!(dj.add_report(Box::new(TestReport{complete: complete2})).is_ok());
 
-        let beat = dj.register(String::from("test_beat"), Duration::from_secs(1)).unwrap();
-        let _ = beat.now();
+        let beat = dj.spin_new(String::from("test_beat")).unwrap();
+        assert!(beat.now().is_ok());
 
         // Wait a moment for the report to run
         std::thread::sleep(Duration::from_secs(3));
@@ -142,7 +145,7 @@ mod tests {
  
         // Send beats to the deck
         let beat_delay_duration = Duration::from_secs(1_u64);
-        if let Ok(b) = dj.register(String::from("test_beat"), beat_delay_duration)  {
+        if let Ok(b) = dj.spin_new(String::from("test_beat"))  {
             let t = SystemTime::now();
             for n in 1..number_of_beats {
                 let mut t_ = t.checked_add(beat_delay_duration * n ).unwrap();
@@ -164,7 +167,9 @@ mod tests {
         let tc = 5;
         let td = 3;
         let now = SystemTime::now();
-        let mut n = Record::new("foo".to_string(), 0, Duration::from_secs(td));
+        // let mut n = Record::new("foo".to_string(), 0, Duration::from_secs(td));
+        let mut n = Record::new("foo".to_string(), 0);
+        n.set_expected_freq(Duration::from_secs(td));
 
         // Test get_avg
         for i in 0..tc {
@@ -222,7 +227,7 @@ mod tests {
             for i in 1..=test_count {
                 let m = durations.get(i as usize % durations.len()).unwrap();
                 let d = Duration::from_millis(*m);
-                let b = dj.register(format!("test{:?}", i), d).unwrap();
+                let b = dj.spin_new(format!("test{:?}", i)).unwrap();
                 futs.push(run_task2(d, total_dur, b));
             }
             while let Some(()) = futs.next().await { }
