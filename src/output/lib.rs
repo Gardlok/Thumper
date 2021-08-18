@@ -115,13 +115,13 @@ impl Output {
                     for (id, record) in arm.iter() {
                         match lrb_map.entry(*id) {
                             std::collections::hash_map::Entry::Occupied(o) => {
-                                if !record.has_updated_since(Some(o.into_mut())) {
+                                if !record.has_beat_since(Some(o.into_mut())) {
                                     // In this scenario the record exist but there are no updates to report
                                     continue
                                 }
                             },
                             std::collections::hash_map::Entry::Vacant(v) => {
-                                if let Some(timestamp) = record.get_last() {
+                                if let Some(timestamp) = record.raw_track.back() {
                                     // Insert the new record to lrb
                                     v.insert(*timestamp);
                                 }

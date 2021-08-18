@@ -2,6 +2,7 @@
 use std::time::{Duration, SystemTime};
 use std::sync::mpsc;
 
+// use crate::{Result, TE, DM2Deck, ConfidenceLevel::UserDefined};
 use crate::{Result, TE, DM2Deck};
 
 // ////////////////////////////////////////////////////////////////////////
@@ -48,6 +49,7 @@ impl Beat {
     }
 
 	pub fn set_expected_freq(&self, expected: Duration) -> Result<()> {
+		// match self.sender.send(DM2Deck::SetExpectedFreq(self.id, expected, UserDefined)) {
 		match self.sender.send(DM2Deck::SetExpectedFreq(self.id, expected)) {
 			Err(e) => Err(TE::DM2DeckSendFail(e)),
 			_ => Ok(()),
@@ -63,4 +65,10 @@ impl Beat {
 
 }
 
+// Upon the Beat being dropped...remove it from the record map
+impl Drop for Beat {
+	fn drop(&mut self) {
+		let _ = self.sender.send(DM2Deck::Deregistration(self.id));
+    }
+}
 		

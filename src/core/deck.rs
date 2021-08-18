@@ -4,7 +4,8 @@ use std::collections::HashMap;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 
-use crate::{Record, DM2DJ, Indexer};
+// use crate::{Record, DM2DJ, Indexer, ConfidenceLevel, DM2OutputRunner};
+use crate::{Record, DM2DJ, Indexer, DM2OutputRunner};
 
 
 // ////////////////////////////////////////////////////////////////
@@ -20,9 +21,9 @@ pub enum DM2Deck {
     Ping(i32, SystemTime),
     Registration(String),
     Deploy(i32, SystemTime),
+    // SetExpectedFreq(i32, Duration, ConfidenceLevel),
     SetExpectedFreq(i32, Duration),
     Deregistration(i32),
-    UpdateAtomicRecordMap,
     Init()
 }
 
@@ -32,7 +33,10 @@ pub enum DM2Deck {
 pub struct Deck;
 
 impl Deck {
-    pub fn run(rx: Receiver<DM2Deck>, dj_tx: Sender<DM2DJ>) {
+    pub fn run(rx: Receiver<DM2Deck>, 
+               dj_tx: Sender<DM2DJ>,
+               outputrunner_tx: Sender<DM2OutputRunner>,
+            ) {
 
         // Spawn a new thread owning the core data.
         // Currently we don't have errors bubbling out and will need
@@ -48,53 +52,64 @@ impl Deck {
             let arm2 = arm.clone();
 
             loop {    
-                if let Ok(call) = rx.recv() { match call {
-                    DM2Deck::Init() => {
-                        if let Err(e) =  dj_tx.send(DM2DJ::ARM(arm2.clone())) {
-                            panic!("TX to DJ failed: {:?}", e)
-                        } 
-                    },
-                    DM2Deck::Deploy(id, time) => {
-                        if let Some(n) = rm.get_mut(&id) {
-                            n.set_deployment(time);
+                if let Ok(call) = rx.recv() { 
+                    match call {
+                        DM2Deck::Init() => {
+                            if let Err(e) =  dj_tx.send(DM2DJ::ARM(arm2.clone())) {
+                                panic!("TX to DJ failed: {:?}", e)
+                            } 
+                        },
+                        DM2Deck::Deploy(id, time) => {
+                            if let Some(n) = rm.get_mut(&id) {
+                                n.set_deployment(time);
+                            } else {
+                                continue
+                            }
+                        },
+                        // DM2Deck::SetExpectedFreq(id, expected, confidence_level) => {
+                        DM2Deck::SetExpectedFreq(id, expected) => {
+                            if let Some(n) = rm.get_mut(&id) {
+                                // n.set_expected_freq(expected, confidence_level);
+                                n.set_expected_freq(expected);
+                            } else {
+                                continue
+                            }
+                        },
+                        DM2Deck::Ping(id, time) => {
+                            if let Some(n) = rm.get_mut(&id) {
+                                n.add_beat(time);
+                            } else {
+                                continue
+                            }
+                        },
+                        DM2Deck::Registration(name) => {
+                            match indexer.next() {
+                                Ok(id) => { 
+                                    rm.insert(id, Record::new(name, id)); 
+                                    if let Err(_e) =  dj_tx.send(DM2DJ::ID(Ok(id))) {
+                                        rm.remove(&id);
+                                        break;
+                                    }
+                                },
+                                Err(e) => { let _ = dj_tx.send(DM2DJ::ID(Err(e))); },
+                            }
                         }
-                    },
-                    DM2Deck::SetExpectedFreq(id, expected) => {
-                        if let Some(n) = rm.get_mut(&id) {
-                            n.set_expected_freq(expected);
-                        }
-                    },
-                    DM2Deck::Ping(id, time) => {
-                        if let Some(n) = rm.get_mut(&id) {
-                            n.add_beat(time);
-                        }
-                    },
-                    DM2Deck::Registration(name) => {
-                        match indexer.next() {
-                            Ok(id) => { 
-                                rm.insert(id, Record::new(name, id)); 
-                                if let Err(_e) =  dj_tx.send(DM2DJ::ID(Ok(id))) {
-                                    rm.remove(&id);
-                                    break;
-                                }
-                            },
-                            Err(e) => { let _ = dj_tx.send(DM2DJ::ID(Err(e))); },
-                        }
+                        DM2Deck::Deregistration(id) => {
+                            if let Some(_) = rm.remove(&id) {
+                                indexer.remove(id);
+                            } else {
+                                continue
+                            };
+                        },
+                    };
+
+                    // At this point we assume _some_ changes have been made and will need to
+                    // update the atomic record map.
+                    if let Ok(mut arm) = arm.write() {
+                        *arm = rm.clone();
                     }
-                    DM2Deck::Deregistration(id) => {
-                        if let Some(_) = rm.remove(&id) {
-                            indexer.remove(id);
-                        };
-                    },
-                    DM2Deck::UpdateAtomicRecordMap => {
-                        if let Ok(mut arm) = arm.write() {
-                            *arm = rm.clone();
-                        }
-                    }
-                    _ => {
-                        break;
-                    },
-                }} else { break };
+
+                } else { break };
             };
         });
 

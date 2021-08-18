@@ -31,7 +31,7 @@ impl Report for BenchOutput {
             let mut latest_beat = UNIX_EPOCH;
             for beat in beats {
                 // let ts = beat.duration_since(UNIX_EPOCH).expect("Marty!").as_nanos() as i64;
-                if beat > &latest_beat { latest_beat = beat.clone()};
+                if beat > latest_beat { latest_beat = beat.clone()};
 
                 // Report beat as a timestamp
                 unimplemented!();
@@ -106,7 +106,7 @@ fn record(c: &mut Criterion) {
     // Bench verifying whether the record has been updated or not ///////////////////////
     let has_updated = || {
         // by not passing in the SystemTime, it will generate it's own.
-        let _ = record.has_updated_since(None);
+        let _ = record.has_beat_since(None);
     };
     group.bench_function("has_updated", |b| b.iter(|| has_updated()));
 

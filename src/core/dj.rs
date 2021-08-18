@@ -44,25 +44,14 @@ impl TheDJ {
         let (dj_tx, dj_rx) = mpsc::channel();
         let (deck_tx, deck_rx) = mpsc::channel();  
         let deck_tx_2 = deck_tx.clone();
-        let deck_tx_3 = deck_tx.clone();
         let (outputrunner_tx, outputrunner_rx) = mpsc::channel();  
 
         // Spin up the Deck, where the core data is stored/processed
-        Deck::run(deck_rx, dj_tx);
-
-        // This will tell the deck to update the atomic record map every 1 second
-        thread::spawn(move || {
-            loop {
-                if let Err(e) = deck_tx_2.send(DM2Deck::UpdateAtomicRecordMap) {
-                    panic!("Could not send reqwuest to update: {:?}", e);
-                }
-                thread::sleep(Duration::from_secs(1));
-            }
-        });
+        Deck::run(deck_rx, dj_tx, outputrunner_tx.clone());
 
         // Init the DJ 
         let mut the_dj = TheDJ { 
-            rt_tx: deck_tx_3.clone(),
+            rt_tx: deck_tx_2.clone(),
             rt_rx: dj_rx,
             outputrunner_tx,
             atomic_record_map: None,
@@ -94,6 +83,16 @@ impl TheDJ {
                 output_runner.run();
             });
         }
+
+        // This will tell the deck to update the atomic record map every 1 second
+        thread::spawn(move || {
+            loop {
+                // if let Err(e) = deck_tx_2.send(DM2Deck::UpdateAtomicRecordMap) {
+                //     panic!("Could not send reqwuest to update: {:?}", e);
+                // }
+                thread::sleep(Duration::from_secs(1));
+            }
+        });
 
         // Return the instance of TheDJ  to caller
         Ok(the_dj)
@@ -177,7 +176,7 @@ impl TheDJ {
         if let Ok(record_map) = self.atomic_record_map.as_ref().expect("You have no ARM here").read() { 
             let mut roster = Vec::new();
             record_map.values()
-                .filter(|x| x.get_last().is_some()) 
+                .filter(|x| x.raw_track.back().is_some()) 
                 .for_each(|x| roster.push(x.id));
             if !roster.is_empty() {
                 return Ok(roster)

@@ -58,7 +58,7 @@ impl Report for InfluxDB {
                     .body(msg)
                     .header(AUTHORIZATION, &header_value)
                     .send()?;
-                if beat > &latest_beat { latest_beat = beat.clone()};
+                if beat > latest_beat { latest_beat = beat.clone()};
             }
 
             // Update the last beat record so we know where to pickup next iteration
